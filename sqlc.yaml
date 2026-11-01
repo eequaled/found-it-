@@ -1,0 +1,18 @@
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: file://.tools/sqlc-gen-better-python.wasm
+      sha256: ea40a229077a701acb2d5282e95d8dd7cf9759ca8fe2558fe7b2fe0062f63627
+sql:
+  - engine: postgresql
+    schema: migrations
+    queries: app/db/queries
+    codegen:
+      - out: app/db/generated
+        plugin: python
+        options:
+          package: app.db.generated
+          sql_driver: asyncpg
+          model_type: dataclass
+          emit_init_file: true
