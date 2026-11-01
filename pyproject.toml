@@ -23,7 +23,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["generation*"]
+include = ["app*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -32,4 +32,4 @@ pythonpath = ["."]
 
 [tool.ruff]
 target-version = "py312"
-exclude = ["references", "generation/generated"]
+exclude = ["references", "app/db/generated"]

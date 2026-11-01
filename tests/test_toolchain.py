@@ -3,7 +3,7 @@ import os
 
 import asyncpg
 
-from generation.generated.health import health_probe
+from app.db.generated.health import health_probe
 
 
 async def test_generated_health_probe():
