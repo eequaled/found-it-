@@ -8,9 +8,9 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA = ROOT / "generation/schema"
-QUERIES = ROOT / "generation/queries"
-GENERATED = ROOT / "generation/generated"
+SCHEMA = ROOT / "migrations"
+QUERIES = ROOT / "app/db/queries"
+GENERATED = ROOT / "app/db/generated"
 
 
 def sqlc_binary():
