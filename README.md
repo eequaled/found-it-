@@ -74,6 +74,14 @@ indistinguishable from a missing one. `GET /reports/{id}/status` requires
 Image validation and private photo storage primitives exist and are
 tested, but no endpoint accepts an upload yet.
 
+`GET /reports` is the public search. Keyword, category, type, inclusive
+calendar-date bounds, location substring and paging are combined in one
+statement, so an empty or out-of-range page still reports the exact total;
+results are ordered by rank, then newest, then id. `scripts/seed_search.py`
+creates its own disposable database, seeds synthetic reports for planner
+measurements and drops it again; it never writes to the database named in
+`TEST_DATABASE_URL`.
+
 ## Generation
 
 The generator is a pinned dependency, not vendored source:
@@ -91,6 +99,7 @@ scripts/codegen.py                     validate SQL and run sqlc generate
 scripts/dbmate.py                      invoke the pinned dbmate binary
 scripts/database.py                    disposable test databases
 scripts/migrations.py                  migrate, rollback and roundtrip checks
+scripts/seed_search.py                 disposable synthetic search fixture
 ```
 
 ```sh
