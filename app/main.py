@@ -51,5 +51,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     from app.api.reports import router as reports_router
 
+    from app.api.search import router as search_router
+
+    app.include_router(search_router)
     app.include_router(reports_router)
     return app

@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from app.db.generated import history, reports
+from app.db.generated import history, reports, search
 from app.db.generated.enums import ReportStatus, StatusActor
 from app.errors import DomainError
 from app.security import issue_token, token_matches
@@ -72,6 +72,22 @@ async def get_public_photo(pool, report_id, store):
     if key is None:
         raise DomainError("not_found", "Photo not found", 404)
     return await asyncio.to_thread(store.load, key)
+
+
+async def search_public(pool, values, page_size):
+    filters = dict(values)
+    page = filters.pop("page")
+    filters.pop("page_size")
+    location = filters.pop("location")
+    # SQL wildcards are literal user characters, not an extra query language.
+    pattern = None if location is None else "%" + location.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+    async with pool.acquire(timeout=2) as conn:
+        rows = await search.search_public_reports(
+            conn, **filters, location_pattern=pattern,
+            page_size=page_size, page_offset=(page - 1) * page_size,
+        )
+    return {"items": [row for row in rows if row.id_ is not None],
+            "total": rows[0].total, "page": page, "page_size": page_size}
 
 
 async def get_public_report(pool, report_id):
