@@ -1,4 +1,4 @@
-"""Bound report bodies before multipart parsing; share JSON/form validation."""
+"""Bound report/claim bodies before parsing; share report JSON/form validation."""
 import asyncio
 
 from fastapi import Request
@@ -18,15 +18,18 @@ class ReportBodyLimit:
         self.app, self.limit = app, limit
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"].rstrip("/") != "/reports":
+        path = scope.get("path", "").rstrip("/")
+        claim = path.startswith("/reports/") and path.endswith("/claims")
+        if scope["type"] != "http" or scope["method"] != "POST" or (path != "/reports" and not claim):
             return await self.app(scope, receive, send)
+        limit = 65536 if claim else self.limit
         body = bytearray()
         while True:
             message = await receive()
             if message["type"] == "http.disconnect":
                 return
             chunk = message.get("body", b"")
-            if len(body) + len(chunk) > self.limit:
+            if len(body) + len(chunk) > limit:
                 response = error_response(Request(scope), "request_too_large", "Report request is too large", 413)
                 return await response(scope, receive, send)
             body.extend(chunk)
