@@ -4,9 +4,51 @@
 #   sqlc-gen-better-python v0.8.0
 from __future__ import annotations
 
-__all__: collections.abc.Sequence[str] = ()
+__all__: collections.abc.Sequence[str] = (
+    "Claim",
+    "Report",
+)
 
+import dataclasses
 import typing
 
 if typing.TYPE_CHECKING:
+    from app.db.generated import enums
     import collections.abc
+    import datetime
+    import uuid
+
+
+@dataclasses.dataclass()
+class Claim:
+    id_: uuid.UUID
+    report_id: uuid.UUID
+    report_type: enums.ReportType
+    status: enums.ClaimStatus
+    claimant_name: str
+    claimant_contact: str
+    evidence: str
+    tracking_token_hash: memoryview
+    decision_note: str | None
+    decided_at: datetime.datetime | None
+    created_at: datetime.datetime
+
+
+@dataclasses.dataclass()
+class Report:
+    id_: uuid.UUID
+    type: enums.ReportType
+    status: enums.ReportStatus
+    category: enums.ReportCategory
+    title: str
+    description: str
+    event_date: datetime.date
+    location_text: str
+    photo_path: str | None
+    contact_name: str | None
+    contact_email: str | None
+    contact_phone: str | None
+    tracking_token_hash: memoryview
+    search_vector: typing.Any | None
+    created_at: datetime.datetime
+    updated_at: datetime.datetime

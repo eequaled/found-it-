@@ -25,6 +25,9 @@ async def check_migrations():
                 "SELECT typname FROM pg_type WHERE typtype='e' "
                 "AND typnamespace='public'::regnamespace"
             ), "Rollback left application enums behind"
+            assert not await conn.fetchval(
+                "SELECT 1 FROM pg_extension WHERE extname='pg_trgm'"
+            ), "Rollback left the application trigram extension behind"
             await dbmate(url, "up")
             assert await conn.fetch(query) == versions
         finally:
