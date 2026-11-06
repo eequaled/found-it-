@@ -1,0 +1,6 @@
+{
+  "name": "foundit-tools",
+  "private": true,
+  "version": "0.1.0",
+  "devDependencies": {"dbmate": "2.37.0"}
+}

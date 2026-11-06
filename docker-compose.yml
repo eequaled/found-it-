@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: foundit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: foundit
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U foundit -d foundit"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api:
+    build: .
+    env_file: .env
+    environment:
+      FOUNDIT_DATABASE_URL: ${FOUNDIT_CONTAINER_DATABASE_URL:?Set the container database URL in .env}
+      FOUNDIT_ADMIN_KEY: ${FOUNDIT_ADMIN_KEY:?Set a random admin key in .env}
+      FOUNDIT_UPLOAD_DIR: /app/uploads
+    ports: ["8000:8000"]
+    volumes: ["uploads:/app/uploads"]
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  postgres-data:
+  uploads:

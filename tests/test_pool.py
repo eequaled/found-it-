@@ -49,9 +49,12 @@ async def test_connection_dependency_reuses_pool(application, pool):
     pool.acquire.return_value.__aexit__.assert_awaited_once()
 
 
-async def test_real_postgres_lifespan(application):
+async def test_real_postgres_lifespan(application, database_url):
     from app.db.generated.health import health_probe
 
+    application.state.settings = application.state.settings.model_copy(
+        update={"database_url": database_url}
+    )
     async with lifespan(application):
         pool = application.state.pool
         async with pool.acquire() as conn:

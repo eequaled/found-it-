@@ -4,18 +4,26 @@ Async FastAPI/PostgreSQL lost-and-found backend with generated asyncpg queries.
 The existing frontend prototype is reconstructed separately on
 `integratedapp_proto`; it is not part of this branch.
 
-## Runtime foundation
+## Local development
 
-Requires Python 3.12+ and PostgreSQL 16. Currently only `/health`, `/docs` and
-`/openapi.json` are implemented; report, claim and admin routes are later
-reconstruction units.
+Requires Python 3.12+, Node 22+, PostgreSQL 16 and Docker Compose. Use a Python
+virtual environment, then:
 
 ```sh
-python3.12 -m venv .venv
-. .venv/bin/activate
-python -m pip install -e '.[test]'
 cp .env.example .env
-# Set the database URL and a fresh random admin key in .env.
+# Replace the admin key and DB password; keep all DB settings consistent.
+make install
+docker compose up -d db
+make migrate
+make up
+```
+
+The host URL uses `localhost`; the container URL uses service name `db`.
+URL-encode passwords in URLs. Compose reads `.env`, which is excluded from the
+image and from Git. The API listens on port 8000. To run it without Docker
+against an existing database:
+
+```sh
 uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000
 ```
 
@@ -25,15 +33,32 @@ The pool has bounded startup, acquisition, query and graceful shutdown times.
 `FOUNDIT_ADMIN_KEY` is required by the existing settings even though admin
 authentication is not implemented yet.
 
+## Migrations
+
+`migrations/` holds handwritten, ordered dbmate migrations; applied migrations
+are never rewritten. `make migrate` applies pending migrations to the database
+named by `FOUNDIT_DATABASE_URL` and `make rollback` reverses exactly one.
+`make check-migrations` applies every migration to an owned temporary database,
+rolls back one step at a time, re-applies them, then drops that database.
+
+The pinned `dbmate` binary is a dev dependency installed by `make install`; it is
+not vendored.
+
 ## Tests
+
+Set `TEST_DATABASE_URL` to an existing database on a **local test server**, with
+a role allowed to create databases. Tests never roll back or drop that supplied
+database: each integration case creates, migrates and drops its own UUID-named
+database. Migration checking also uses a disposable database.
 
 ```sh
 export TEST_DATABASE_URL='postgresql://user:password@localhost:5432/foundit_test'
-pytest -q
+make test              # lint, SQL/codegen checks, tests and migration roundtrip
+make check-migrations  # up, one-by-one rollback, up in an owned temporary DB
 ```
 
-The suite includes a real PostgreSQL lifespan test; the request-level tests mock
-the pool. Do not commit `.env`, real credentials or uploaded files.
+`make down` stops containers without deleting named volumes. Do not commit
+`.env`, real credentials or uploaded files.
 
 ## Generation
 
@@ -49,6 +74,9 @@ app/db/queries/health.sql              handwritten fixture query
 app/db/generated/                      generated asyncpg adapter, checked in
 scripts/prepare_plugin.py              download/verify the pinned WASM artifact
 scripts/codegen.py                     validate SQL and run sqlc generate
+scripts/dbmate.py                      invoke the pinned dbmate binary
+scripts/database.py                    disposable test databases
+scripts/migrations.py                  migrate, rollback and roundtrip checks
 ```
 
 ```sh
@@ -61,16 +89,12 @@ make test              # validate, regenerate, lint and run tests
 The fixture is deliberately minimal: a no-op schema migration and a
 `HealthProbe` query selecting the integer constant `1`. It exists only to prove
 the pinned generator and asyncpg output work end to end. Regenerating must leave
-no git diff in the generated output, so stale or hand-edited generated code fails.
+no git diff in the generated output, so stale or hand-edited generated code
+fails.
 
 The upstream asyncpg test fixture emits a `v0.8.0` header even though it belongs
 to the pinned v0.9.0 source tree. The checksum is pinned and generated headers are
 not edited by hand.
-
-## Next unit
-
-Docker Compose, dbmate-backed migrations and an isolated migration-backed test
-database are the next foundation review unit.
 
 ## Third-party notices
 
