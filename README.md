@@ -82,6 +82,14 @@ creates its own disposable database, seeds synthetic reports for planner
 measurements and drops it again; it never writes to the database named in
 `TEST_DATABASE_URL`.
 
+`POST /reports/{id}/claims` creates a pending claim for an open found report and
+returns its one-time token. The claimant name, contact and evidence are never
+exposed by a public endpoint, no claim tracking, withdrawal or decision endpoint
+exists yet, and bodies are capped before parsing: 64 KiB for claims and the
+photo limit plus 64 KiB for report creation. Claims take a `FOR SHARE` lock on
+the report and hold it through commit, so report-closing writers wait and a
+submission that waited behind one re-reads the fresh status.
+
 ## Generation
 
 The generator is a pinned dependency, not vendored source:
