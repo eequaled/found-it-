@@ -1,5 +1,5 @@
 PYTHON ?= python
-.PHONY: install up down migrate rollback sqlc-generate generate validate check-generated check-migrations test
+.PHONY: install up down migrate rollback sqlc-generate generate validate check-generated check-migrations test test-ui
 install:
 	npm ci --ignore-scripts
 	$(PYTHON) -m pip install -e '.[test]'
@@ -24,3 +24,7 @@ check-migrations:
 test: validate check-generated
 	ruff check .
 	$(PYTHON) -m pytest -q
+test-ui:
+	npm ci --prefix admin-ui
+	npm test --prefix admin-ui
+	npm run build --prefix admin-ui

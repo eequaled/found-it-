@@ -55,9 +55,12 @@ database. Migration checking also uses a disposable database.
 export TEST_DATABASE_URL='postgresql://user:password@localhost:5432/foundit_test'
 make test              # lint, SQL/codegen checks, tests and migration roundtrip
 make check-migrations  # up, one-by-one rollback, up in an owned temporary DB
+make test-ui           # install, test and build the admin shell
 ```
 
-`make down` stops containers without deleting named volumes. Do not commit
+`make down` stops containers without deleting named volumes. The admin shell
+in `admin-ui/` is only a Vite/React placeholder that proxies relative `/api`
+requests to port 8000 and has a single component test. Do not commit
 `.env`, real credentials or uploaded files.
 
 ## Report API
