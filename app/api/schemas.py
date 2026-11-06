@@ -59,6 +59,10 @@ class PublicReport(BaseModel):
     created_at: datetime
 
 
+class ReportMatches(BaseModel):
+    items: list[PublicReport]
+
+
 class ReportHistoryEvent(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int = Field(validation_alias="id_")

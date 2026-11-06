@@ -3,8 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Header, Request, Response
 
 from app.api.report_input import creation_body_schema, parse_report
-from app.api.schemas import PublicReport, ReportCreated, ReportOwnerStatus
-from app.services import reports
+from app.api.schemas import PublicReport, ReportCreated, ReportMatches, ReportOwnerStatus
+from app.services import matching, reports
 
 router = APIRouter(prefix="/reports")
 
@@ -24,6 +24,13 @@ async def create_report(request: Request):
 async def get_photo(report_id: UUID, request: Request):
     content, media_type = await reports.get_public_photo(request.app.state.pool, report_id, request.app.state.photos)
     return Response(content, media_type=media_type, headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"})
+
+
+@router.get("/{report_id}/matches", response_model=ReportMatches, tags=["Public reports"])
+async def get_matches(report_id: UUID, request: Request):
+    return await matching.find_matches(
+        request.app.state.pool, report_id, request.app.state.settings.match_window_days,
+    )
 
 
 @router.get("/{report_id}", response_model=PublicReport, tags=["Public reports"])
