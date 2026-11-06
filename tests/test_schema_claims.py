@@ -1,22 +1,10 @@
 import asyncio
-from hashlib import sha256
 from uuid import uuid4
 
 import asyncpg
 import pytest
 
-from tests.schema_helpers import insert_report
-
-
-async def insert_claim(db, report_id, **changes):
-    values = dict(report_type="found", claimant_name="Claimant", claimant_contact="owner@example.com",
-                  evidence="The case has my initials on its inside", tracking_token_hash=sha256(uuid4().bytes).digest())
-    assert changes.keys() <= values.keys()
-    values.update(changes)
-    return await db.fetchrow("""
-        INSERT INTO claims (report_id, report_type, claimant_name, claimant_contact, evidence, tracking_token_hash)
-        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *
-    """, report_id, *values.values())
+from tests.schema_helpers import insert_claim, insert_report
 
 
 async def test_claim_defaults_and_found_only_foreign_key(db):

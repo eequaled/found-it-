@@ -6,7 +6,9 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "Claim",
+    "ClaimStatusHistory",
     "Report",
+    "ReportStatusHistory",
 )
 
 import dataclasses
@@ -35,6 +37,17 @@ class Claim:
 
 
 @dataclasses.dataclass()
+class ClaimStatusHistory:
+    id_: int
+    claim_id: uuid.UUID
+    from_status: enums.ClaimStatus | None
+    to_status: enums.ClaimStatus
+    actor: enums.StatusActor
+    note: str | None
+    created_at: datetime.datetime
+
+
+@dataclasses.dataclass()
 class Report:
     id_: uuid.UUID
     type: enums.ReportType
@@ -52,3 +65,14 @@ class Report:
     search_vector: typing.Any | None
     created_at: datetime.datetime
     updated_at: datetime.datetime
+
+
+@dataclasses.dataclass()
+class ReportStatusHistory:
+    id_: int
+    report_id: uuid.UUID
+    from_status: enums.ReportStatus | None
+    to_status: enums.ReportStatus
+    actor: enums.StatusActor
+    note: str | None
+    created_at: datetime.datetime
