@@ -71,6 +71,9 @@ indistinguishable from a missing one. `GET /reports/{id}/status` requires
 `X-Tracking-Token` and returns the status with its history. Every response is
 `no-store`.
 
+Image validation and private photo storage primitives exist and are
+tested, but no endpoint accepts an upload yet.
+
 ## Generation
 
 The generator is a pinned dependency, not vendored source:
