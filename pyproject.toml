@@ -9,6 +9,7 @@ dependencies = [
     "pydantic-settings==2.11.0",
     "email-validator==2.3.0",
     "pillow==11.3.0",
+    "python-multipart==0.0.20",
 ]
 
 [project.optional-dependencies]

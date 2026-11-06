@@ -8,6 +8,7 @@ from __future__ import annotations
 __all__: collections.abc.Sequence[str] = (
     "GetPublicReportRow",
     "GetReportOwnerAccessRow",
+    "get_public_photo",
     "get_public_report",
     "get_report_by_id",
     "get_report_owner_access",
@@ -71,6 +72,11 @@ FROM reports WHERE id = $1 AND status = 'open'
 
 GET_REPORT_OWNER_ACCESS: typing.Final[str] = """-- name: GetReportOwnerAccess :one
 SELECT id, status, tracking_token_hash FROM reports WHERE id = $1
+"""
+
+GET_PUBLIC_PHOTO: typing.Final[str] = """-- name: GetPublicPhoto :one
+SELECT photo_path FROM reports
+WHERE id = $1 AND status = 'open' AND photo_path IS NOT NULL
 """
 
 
@@ -148,3 +154,10 @@ async def get_report_owner_access(conn: ConnectionLike, *, id_: uuid.UUID) -> Ge
     if row is None:
         return None
     return GetReportOwnerAccessRow(id_=row[0], status=enums.ReportStatus(row[1]), tracking_token_hash=memoryview(row[2]))
+
+
+async def get_public_photo(conn: ConnectionLike, *, id_: uuid.UUID) -> str | None:
+    row = await conn.fetchrow(GET_PUBLIC_PHOTO, id_)
+    if row is None:
+        return None
+    return row[0]

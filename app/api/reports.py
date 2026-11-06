@@ -1,16 +1,29 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Request, Response
 
-from app.api.schemas import PublicReport, ReportCreate, ReportCreated, ReportOwnerStatus
+from app.api.report_input import creation_body_schema, parse_report
+from app.api.schemas import PublicReport, ReportCreated, ReportOwnerStatus
 from app.services import reports
 
 router = APIRouter(prefix="/reports")
 
 
-@router.post("", response_model=ReportCreated, status_code=201, tags=["Public reports"])
-async def create_report(payload: ReportCreate, request: Request):
-    return await reports.create_report(request.app.state.pool, payload.model_dump())
+@router.post("", response_model=ReportCreated, status_code=201, tags=["Public reports"], openapi_extra=creation_body_schema())
+async def create_report(request: Request):
+    values, photo = await parse_report(request)
+    if photo is not None:
+        return await reports.create_photo_report(request.app.state.pool, values, request.app.state.photos, photo)
+    return await reports.create_report(request.app.state.pool, values)
+
+
+@router.get("/{report_id}/photo", tags=["Public reports"], response_class=Response, responses={
+    200: {"content": {mime: {"schema": {"type": "string", "format": "binary"}}
+                      for mime in ("image/jpeg", "image/png", "image/webp")}},
+})
+async def get_photo(report_id: UUID, request: Request):
+    content, media_type = await reports.get_public_photo(request.app.state.pool, report_id, request.app.state.photos)
+    return Response(content, media_type=media_type, headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"})
 
 
 @router.get("/{report_id}", response_model=PublicReport, tags=["Public reports"])

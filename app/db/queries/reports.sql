@@ -18,3 +18,7 @@ FROM reports WHERE id = sqlc.arg(id) AND status = 'open';
 
 -- name: GetReportOwnerAccess :one
 SELECT id, status, tracking_token_hash FROM reports WHERE id = sqlc.arg(id);
+
+-- name: GetPublicPhoto :one
+SELECT photo_path FROM reports
+WHERE id = sqlc.arg(id) AND status = 'open' AND photo_path IS NOT NULL;
