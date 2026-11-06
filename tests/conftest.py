@@ -53,6 +53,6 @@ async def api(settings, database_url):
     app = create_app(settings.model_copy(update={"database_url": database_url}))
     async with app.router.lifespan_context(app):
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app), base_url="http://test"
+            transport=httpx.ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test"
         ) as client:
             yield client

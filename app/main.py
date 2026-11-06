@@ -29,6 +29,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         request.state.request_id = str(uuid4())
         response = await call_next(request)
         response.headers["X-Request-ID"] = request.state.request_id
+        # Custom-token owner responses and mutable report data must not be cached.
+        response.headers["Cache-Control"] = "no-store"
         return response
 
     @app.get("/health", tags=["Operations"])
@@ -41,4 +43,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return error_response(request, "database_unavailable", "Database unavailable", 503)
         return {"status": "ok"}
 
+    from app.api.reports import router as reports_router
+
+    app.include_router(reports_router)
     return app
