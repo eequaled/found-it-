@@ -60,6 +60,17 @@ make check-migrations  # up, one-by-one rollback, up in an owned temporary DB
 `make down` stops containers without deleting named volumes. Do not commit
 `.env`, real credentials or uploaded files.
 
+## Report API
+
+`POST /reports` accepts one JSON report and returns `{id, tracking_token}`. The
+raw token is returned once, after commit, and only its SHA-256 digest is stored;
+it is not recoverable. New reports are `pending_review` and therefore not public.
+`GET /reports/{id}` returns an open report with eight public fields and never
+contact details, the digest or moderation notes; any non-open report is
+indistinguishable from a missing one. `GET /reports/{id}/status` requires
+`X-Tracking-Token` and returns the status with its history. Every response is
+`no-store`.
+
 ## Generation
 
 The generator is a pinned dependency, not vendored source:

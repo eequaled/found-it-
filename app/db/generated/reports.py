@@ -6,10 +6,15 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "GetPublicReportRow",
+    "GetReportOwnerAccessRow",
+    "get_public_report",
     "get_report_by_id",
+    "get_report_owner_access",
     "insert_report",
 )
 
+import dataclasses
 import typing
 
 if typing.TYPE_CHECKING:
@@ -22,6 +27,25 @@ if typing.TYPE_CHECKING:
 
 from app.db.generated import enums
 from app.db.generated import models
+
+
+@dataclasses.dataclass()
+class GetPublicReportRow:
+    id_: uuid.UUID
+    type: enums.ReportType
+    category: enums.ReportCategory
+    title: str
+    description: str
+    event_date: datetime.date
+    location_text: str
+    created_at: datetime.datetime
+
+
+@dataclasses.dataclass()
+class GetReportOwnerAccessRow:
+    id_: uuid.UUID
+    status: enums.ReportStatus
+    tracking_token_hash: memoryview
 
 
 INSERT_REPORT: typing.Final[str] = """-- name: InsertReport :one
@@ -38,6 +62,15 @@ INSERT INTO reports (
 
 GET_REPORT_BY_ID: typing.Final[str] = """-- name: GetReportById :one
 SELECT id, type, status, category, title, description, event_date, location_text, photo_path, contact_name, contact_email, contact_phone, tracking_token_hash, search_vector, created_at, updated_at FROM reports WHERE id = $1
+"""
+
+GET_PUBLIC_REPORT: typing.Final[str] = """-- name: GetPublicReport :one
+SELECT id, type, category, title, description, event_date, location_text, created_at
+FROM reports WHERE id = $1 AND status = 'open'
+"""
+
+GET_REPORT_OWNER_ACCESS: typing.Final[str] = """-- name: GetReportOwnerAccess :one
+SELECT id, status, tracking_token_hash FROM reports WHERE id = $1
 """
 
 
@@ -101,3 +134,17 @@ async def get_report_by_id(conn: ConnectionLike, *, id_: uuid.UUID) -> models.Re
         created_at=row[14],
         updated_at=row[15],
     )
+
+
+async def get_public_report(conn: ConnectionLike, *, id_: uuid.UUID) -> GetPublicReportRow | None:
+    row = await conn.fetchrow(GET_PUBLIC_REPORT, id_)
+    if row is None:
+        return None
+    return GetPublicReportRow(id_=row[0], type=enums.ReportType(row[1]), category=enums.ReportCategory(row[2]), title=row[3], description=row[4], event_date=row[5], location_text=row[6], created_at=row[7])
+
+
+async def get_report_owner_access(conn: ConnectionLike, *, id_: uuid.UUID) -> GetReportOwnerAccessRow | None:
+    row = await conn.fetchrow(GET_REPORT_OWNER_ACCESS, id_)
+    if row is None:
+        return None
+    return GetReportOwnerAccessRow(id_=row[0], status=enums.ReportStatus(row[1]), tracking_token_hash=memoryview(row[2]))

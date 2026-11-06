@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from app.db.generated.enums import ReportCategory, ReportType
+from app.db.generated.enums import ReportCategory, ReportStatus, ReportType, StatusActor
 
 
 class ReportCreate(BaseModel):
@@ -45,3 +45,31 @@ class ReportCreate(BaseModel):
 class ReportCreated(BaseModel):
     id: UUID
     tracking_token: str
+
+
+class PublicReport(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID = Field(validation_alias="id_")
+    type: ReportType
+    category: ReportCategory
+    title: str
+    description: str
+    event_date: date
+    location_text: str
+    created_at: datetime
+
+
+class ReportHistoryEvent(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int = Field(validation_alias="id_")
+    from_status: ReportStatus | None
+    to_status: ReportStatus
+    actor: StatusActor
+    note: str | None
+    created_at: datetime
+
+
+class ReportOwnerStatus(BaseModel):
+    id: UUID
+    status: ReportStatus
+    history: list[ReportHistoryEvent]

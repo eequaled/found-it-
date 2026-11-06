@@ -11,3 +11,10 @@ INSERT INTO reports (
 
 -- name: GetReportById :one
 SELECT * FROM reports WHERE id = sqlc.arg(id);
+
+-- name: GetPublicReport :one
+SELECT id, type, category, title, description, event_date, location_text, created_at
+FROM reports WHERE id = sqlc.arg(id) AND status = 'open';
+
+-- name: GetReportOwnerAccess :one
+SELECT id, status, tracking_token_hash FROM reports WHERE id = sqlc.arg(id);
